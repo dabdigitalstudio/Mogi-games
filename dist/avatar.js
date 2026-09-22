@@ -3,9 +3,10 @@ import {GLTFLoader} from './vendor/GLTFLoader.js?v=rig4';
 import {clone as cloneSkeleton} from './vendor/utils/SkeletonUtils.js?v=rig4';
 const templates=new Map();
 const rendererAnisotropy=8;
-export function avatarAssetKey(c){const female=c.model==='female';return female?(c.outfit==='hoodie'?'human-female-hoodie':'human-female'):(c.outfit==='jacket'?'human-male-jacket':c.outfit==='longsleeve'?'human-male-longsleeve':'human-male');}
-async function template(key){if(!templates.has(key))templates.set(key,(async()=>{const embedded=document.querySelector('#avatar-assets');const data=embedded?JSON.parse(embedded.textContent)[key]:null;let bytes;if(data)bytes=Uint8Array.from(atob(data),c=>c.charCodeAt(0)).buffer;else{const response=await fetch(new URL('assets/'+key+'.glb?v=4',document.baseURI));if(!response.ok)throw Error('Character asset unavailable');bytes=await response.arrayBuffer();}return (await new GLTFLoader().parseAsync(bytes,'')).scene;})().catch(e=>{templates.delete(key);throw e;}));return templates.get(key);}
+export function avatarAssetKey(c){if(c.asset&&['kay-knight','kay-mage','kay-rogue_hooded'].includes(c.asset))return c.asset;const female=c.model==='female';return female?(c.outfit==='hoodie'?'human-female-hoodie':'human-female'):(c.outfit==='jacket'?'human-male-jacket':c.outfit==='longsleeve'?'human-male-longsleeve':'human-male');}
+async function template(key){if(!templates.has(key))templates.set(key,(async()=>{const embedded=document.querySelector('#avatar-assets');const data=embedded?JSON.parse(embedded.textContent)[key]:null;let bytes;if(data)bytes=Uint8Array.from(atob(data),c=>c.charCodeAt(0)).buffer;else{const response=await fetch(new URL('assets/'+key+'.glb?v=4',document.baseURI));if(!response.ok)throw Error('Character asset unavailable');bytes=await response.arrayBuffer();}const gltf=await new GLTFLoader().parseAsync(bytes,'');gltf.scene.animations=gltf.animations;return gltf.scene;})().catch(e=>{templates.delete(key);throw e;}));return templates.get(key);}
 export function createAvatar(config){
+ if(config.asset&&['kay-knight','kay-mage','kay-rogue_hooded'].includes(config.asset))return createLicensedAvatar(config);
  const group=new THREE.Group();let rig,bones={},rest={},phase=0;const extras=new Set(config.extras||[]);
  const ready=template(avatarAssetKey(config)).then(source=>{if(group.userData.disposed)return;rig=cloneSkeleton(source);rig.rotation.y=Math.PI;rig.scale.set(1.45*(config.body==='slim'?.96:config.body==='athletic'?1.045:1),1.45,1.45);group.add(rig);
  rig.traverse(o=>{if(o.isBone){const name=o.userData.originalName||o.name.replace(/_\d+$/,'');if(!bones[name])bones[name]=o;}if(o.isMesh){o.geometry=o.geometry.clone();o.material=o.material.clone();for(const [k,v]of Object.entries(o.material))if(v?.isTexture){o.material[k]=v.clone();v.colorSpace=THREE.SRGBColorSpace;v.anisotropy=rendererAnisotropy;v.minFilter=THREE.LinearMipmapLinearFilter;v.magFilter=THREE.LinearFilter;v.needsUpdate=true;}o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;const n=o.name;if(/Cornea|Eyelashes|Teeth/.test(n))o.visible=false;if(/Eyeball/i.test(n)){o.visible=true;o.material.color.set(config.eyeColor||'#667b72');o.material.roughness=.16;o.material.clearcoat=.6;}if(/hair/i.test(n)){o.visible=config.hair!=='none';o.material.color.set(config.hairColor);o.material.roughness=.75;o.material.alphaTest=.4;o.material.side=THREE.DoubleSide;}if(n==='outfit_top'){o.material.color.set(config.top);o.material.map=null;o.material.roughness=.82;}if(n==='outfit_bottom'){o.material.color.set(config.pants);o.material.map=null;o.material.roughness=.82;}if(n==='outfit_shoes'){o.material.color.set(config.shoes);o.material.map=null;o.material.roughness=.42;}if(n==='AvatarHead'||n==='AvatarBody'){o.material.roughness=.58;o.material.clearcoat=.16;o.material.clearcoatRoughness=.28;const tint=new THREE.Color(config.skin);o.material.color.setRGB(.72+tint.r*.28,.72+tint.g*.28,.72+tint.b*.28);}}});
@@ -41,4 +42,18 @@ function accessories(rig,bones,c,extras){
  if(['backpack','both'].includes(c.accessory)){const pack=mesh(new THREE.CapsuleGeometry(.15,.20,8,18),dark,0,1.27,-.135);pack.scale.z=.42;for(const s of[-1,1])tube([[s*.09,1.43,-.12],[s*.14,1.46,.035],[s*.13,1.22,.08],[s*.10,1.11,-.08]],.009,dark);const flap=mesh(new THREE.CapsuleGeometry(.095,.06,8,14),fabric,0,1.19,-.19);flap.scale.z=.3;}
  if(extras.has('chain')){tube([[-.055,1.56,.022],[-.065,1.48,.08],[0,1.38,.13],[.065,1.48,.08],[.055,1.56,.022]],.0028,metal);box(0,1.37,.134,.022,.029,.004,metal);}
  if(extras.has('crossbody')){tube([[-.16,1.48,.06],[-.06,1.31,.135],[.13,1.09,.145],[.18,1.03,.05]],.012,dark);box(.1,1.06,.14,.20,.14,.055,dark);box(.1,1.085,.171,.02,.018,.007,metal);}
+}
+
+function createLicensedAvatar(config){
+ const group=new THREE.Group();let mixer,active,actions={};
+ const ready=template(avatarAssetKey(config)).then(source=>{
+  if(group.userData.disposed)return;
+  const rig=cloneSkeleton(source);group.add(rig);
+  rig.traverse(o=>{if(o.isMesh){o.visible=/^(Knight|Mage|Rogue)_/.test(o.name);o.geometry=o.geometry.clone();o.material=o.material.clone();for(const [key,value] of Object.entries(o.material))if(value?.isTexture){o.material[key]=value.clone();o.material[key].anisotropy=8;}o.castShadow=true;o.receiveShadow=true;}});
+  const bounds=new THREE.Box3().setFromObject(rig);const size=bounds.getSize(new THREE.Vector3());const scale=2.45/size.y;rig.scale.multiplyScalar(scale);rig.position.y=-bounds.min.y*scale;rig.rotation.y=Math.PI;
+  mixer=new THREE.AnimationMixer(rig);
+  for(const [state,name] of Object.entries({idle:'Idle',walk:'Walking_A',run:'Running_A',jump:'Jump_Idle'})){const clip=source.animations.find(c=>c.name===name);if(clip)actions[state]=mixer.clipAction(clip);}
+  active=actions.idle;active?.play();mixer.update(0);return rig;
+ });
+ return {group,ready,animate(t,moving,running,jump,dt){if(!mixer)return;const next=actions[jump>.05?'jump':moving?(running?'run':'walk'):'idle']||actions.idle;if(next!==active){next.reset().play();if(active)next.crossFadeFrom(active,.18,true);active=next;}mixer.update(Math.min(dt||.016,.05));}};
 }

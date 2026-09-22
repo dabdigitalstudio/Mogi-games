@@ -1,7 +1,7 @@
-import * as THREE from './vendor/three.module.js?v=rig4';
-import {RoomEnvironment} from './vendor/RoomEnvironment.js?v=rig4';
-import {createAvatar} from './avatar.js?v=rig16';
-import {buildWorld} from './worlds.js?v=rig4';
+import * as THREE from './vendor/three.module.js?v=rig18';
+import {RoomEnvironment} from './vendor/RoomEnvironment.js?v=rig18';
+import {createAvatar} from './avatar.js?v=rig18';
+import {buildWorld} from './worlds.js?v=rig18';
 export function disposeTree(root){root.userData.disposed=true;const gs=new Set(),ms=new Set(),ts=new Set();root.traverse(o=>{if(o.geometry)gs.add(o.geometry);if(o.material)for(const m of Array.isArray(o.material)?o.material:[o.material]){ms.add(m);for(const v of Object.values(m))if(v?.isTexture)ts.add(v);}});gs.forEach(g=>g.dispose());ts.forEach(t=>t.dispose());ms.forEach(m=>m.dispose());root.removeFromParent();}
 export class PortfolioEngine{
  constructor(canvas,config,options={}){
