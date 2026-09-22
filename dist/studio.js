@@ -1,8 +1,8 @@
-import {PortfolioEngine} from './engine.js?v=rig18';
-import {DEFAULT_CONFIG,PRESETS,WORLDS,normalizeConfig,validateConfig,clone,escapeHtml as e,safeUrl} from './config.js?v=rig18';
-import {t} from './i18n.js?v=rig18';
-import {createGameUI} from './game-ui.js?v=rig18';
-import {exportPortfolio,downloadBlob,projectJSON,projectName} from './export.js?v=rig18';
+import {PortfolioEngine} from './engine.js?v=rig20';
+import {DEFAULT_CONFIG,PRESETS,WORLDS,normalizeConfig,validateConfig,clone,escapeHtml as e,safeUrl} from './config.js?v=rig20';
+import {t} from './i18n.js?v=rig20';
+import {createGameUI} from './game-ui.js?v=rig20';
+import {exportPortfolio,downloadBlob,projectJSON,projectName} from './export.js?v=rig20';
 const $=s=>document.querySelector(s),DRAFT_KEY='portfolio-studio-draft-v1';
 let config=clone(DEFAULT_CONFIG),step=0,storyTab='about',view='avatar',playing=false,engine,gameUI,saveTimer,previewTimer,toastTimer,busy=false;
 const thumbnails={presets:{},worlds:{}};

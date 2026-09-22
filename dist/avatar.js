@@ -9,7 +9,6 @@ export function createAvatar(config){
  if(config.asset&&['kay-barbarian','kay-knight','kay-mage','kay-rogue','kay-rogue_hooded'].includes(config.asset))return createLicensedAvatar(config);
  const group=new THREE.Group();let rig,bones={},rest={},phase=0;const extras=new Set(config.extras||[]);
  const ready=template(avatarAssetKey(config)).then(source=>{if(group.userData.disposed)return;rig=cloneSkeleton(source);rig.rotation.y=Math.PI;group.add(rig);
- const bounds=new THREE.Box3().setFromObject(rig),size=bounds.getSize(new THREE.Vector3()),targetHeight=2.45,uniformScale=targetHeight/Math.max(size.y,.001),bodyScale=config.body==='slim'?.98:config.body==='athletic'?1.02:1;rig.scale.set(uniformScale*bodyScale,uniformScale,uniformScale*bodyScale);rig.position.y=-bounds.min.y*uniformScale;rig.userData.rigStandard={height:targetHeight,sourceHeight:size.y,scale:uniformScale};
  rig.traverse(o=>{if(o.isBone){const name=o.userData.originalName||o.name.replace(/_\d+$/,'');if(!bones[name])bones[name]=o;}if(o.isMesh){o.geometry=o.geometry.clone();o.material=o.material.clone();for(const [k,v]of Object.entries(o.material))if(v?.isTexture){o.material[k]=v.clone();v.colorSpace=THREE.SRGBColorSpace;v.anisotropy=rendererAnisotropy;v.minFilter=THREE.LinearMipmapLinearFilter;v.magFilter=THREE.LinearFilter;v.needsUpdate=true;}o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;const n=o.name;if(/Cornea|Eyelashes|Teeth/.test(n))o.visible=false;if(/Eyeball/i.test(n)){o.visible=true;o.material.color.set(config.eyeColor||'#667b72');o.material.roughness=.16;o.material.clearcoat=.6;}if(/hair/i.test(n)){o.visible=config.hair!=='none';o.material.color.set(config.hairColor);o.material.roughness=.75;o.material.alphaTest=.4;o.material.side=THREE.DoubleSide;}if(n==='outfit_top'){o.material.color.set(config.top);o.material.map=null;o.material.roughness=.82;}if(n==='outfit_bottom'){o.material.color.set(config.pants);o.material.map=null;o.material.roughness=.82;}if(n==='outfit_shoes'){o.material.color.set(config.shoes);o.material.map=null;o.material.roughness=.42;}if(n==='AvatarHead'||n==='AvatarBody'){o.material.roughness=.58;o.material.clearcoat=.16;o.material.clearcoatRoughness=.28;const tint=new THREE.Color(config.skin);o.material.color.setRGB(.72+tint.r*.28,.72+tint.g*.28,.72+tint.b*.28);}}});
  group.updateMatrixWorld(true);
  function lowerArm(name,child,side,reach=.32,drop=.94,depth=.16){const b=bones[name],c=bones[child];if(!b||!c)return;const origin=b.getWorldPosition(new THREE.Vector3()),v=c.getWorldPosition(new THREE.Vector3()).sub(origin).normalize();const target=new THREE.Vector3(side*reach,-drop,depth).normalize().applyQuaternion(rig.getWorldQuaternion(new THREE.Quaternion()));const delta=new THREE.Quaternion().setFromUnitVectors(v,target),parent=b.parent.getWorldQuaternion(new THREE.Quaternion());const local=parent.clone().invert().multiply(delta).multiply(parent);b.quaternion.premultiply(local);group.updateMatrixWorld(true);}
@@ -21,11 +20,29 @@ export function createAvatar(config){
  lowerArm('RightForeArm','RightHand',-1,.14,.99,.13);
  for(const [name,b]of Object.entries(bones))rest[name]=b.quaternion.clone();
  accessories(rig,bones,config,extras);
+ // Change anatomical proportions, not camera framing: large head and compact body.
+ const build=config.body==='slim'?.96:config.body==='athletic'?1.04:1;
+ bones.Hips?.scale.multiply(new THREE.Vector3(1.22*build,.58,1.22*build));
+ bones.Head?.scale.multiply(new THREE.Vector3(1.95,3.85,1.95));
+ for(const side of ['Left','Right']){
+  bones[side+'UpLeg']?.scale.multiply(new THREE.Vector3(1,.75,1));
+  bones[side+'Arm']?.scale.multiply(new THREE.Vector3(.72,1,1));
+ }
+ // Torso accessories were authored in model space; carry them with the torso.
+ for(const item of [...rig.children])if(item.isMesh&&!item.isSkinnedMesh){
+  item.position.y=.943645+(item.position.y-.943645)*.58;
+  item.position.x*=1.22;item.position.z*=1.22;
+  item.scale.multiply(new THREE.Vector3(1.22,.58,1.22));
+ }
+ rig.scale.setScalar(1);rig.position.y=0;group.updateMatrixWorld(true);
+ const fitted=new THREE.Box3();rig.traverse(o=>{if(o.isMesh&&o.visible){if(o.isSkinnedMesh){o.skeleton.update();o.computeBoundingBox();}else o.geometry.computeBoundingBox();fitted.union((o.isSkinnedMesh?o.boundingBox:o.geometry.boundingBox).clone().applyMatrix4(o.matrixWorld));}});
+ const fittedScale=2.45/(fitted.max.y-fitted.min.y);rig.scale.setScalar(fittedScale);rig.position.y=-fitted.min.y*fittedScale;rig.userData.floorOffset=rig.position.y;group.updateMatrixWorld(true);
+ const chest=bones.Spine2||bones.Spine;if(chest)for(const item of [...rig.children])if(item.isMesh&&!item.isSkinnedMesh)chest.attach(item);
  return rig;
  });
  function rotate(name,x,y=0,z=0){if(bones[name]&&rest[name])bones[name].quaternion.copy(rest[name]).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(x,y,z)));}
  function poseHands(amount){for(const side of ['Left','Right'])for(const finger of ['HandIndex','HandMiddle','HandRing','HandPinky','HandThumb'])for(let i=1;i<=4;i++){const b=bones[side+finger+i];if(b&&rest[side+finger+i])b.quaternion.copy(rest[side+finger+i]).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(finger==='HandThumb'?amount*.32:amount,0,0)));}}
- return {group,ready,animate(t,moving,running,jump,dt){if(!rig)return;phase+=dt*(moving?(running?12:6):1.2);const swing=moving?Math.sin(phase)*(running?.7:.3):0;poseHands(running?.42:.30);rotate('LeftUpLeg',swing);rotate('RightUpLeg',-swing);rotate('LeftLeg',Math.max(0,-swing)*1.25);rotate('RightLeg',Math.max(0,swing)*1.25);rotate('LeftArm',-swing*.85,0,0);rotate('RightArm',swing*.85,0,0);rotate('LeftForeArm',running?-.28:0);rotate('RightForeArm',running?-.28:0);rotate('Spine2',moving&&running?.07:Math.sin(t*1.3)*.004);rig.position.y=moving?Math.abs(swing)*.045:Math.sin(t*1.5)*.002;rig.rotation.x=THREE.MathUtils.lerp(rig.rotation.x,moving&&running?-.055:0,Math.min(1,dt*10));}};
+ return {group,ready,animate(t,moving,running,jump,dt){if(!rig)return;phase+=dt*(moving?(running?12:6):1.2);const swing=moving?Math.sin(phase)*(running?.7:.3):0;poseHands(running?.42:.30);rotate('LeftUpLeg',swing);rotate('RightUpLeg',-swing);rotate('LeftLeg',Math.max(0,-swing)*1.25);rotate('RightLeg',Math.max(0,swing)*1.25);rotate('LeftArm',-swing*.85,0,0);rotate('RightArm',swing*.85,0,0);rotate('LeftForeArm',running?-.28:0);rotate('RightForeArm',running?-.28:0);rotate('Spine2',moving&&running?.07:Math.sin(t*1.3)*.004);rig.position.y=(rig.userData.floorOffset||0)+(moving?Math.abs(swing)*.045:Math.sin(t*1.5)*.002);rig.rotation.x=THREE.MathUtils.lerp(rig.rotation.x,moving&&running?-.055:0,Math.min(1,dt*10));}};
 }
 function accessories(rig,bones,c,extras){
  const dark=new THREE.MeshStandardMaterial({color:'#18232c',roughness:.4}),metal=new THREE.MeshStandardMaterial({color:c.accessoryColor,metalness:.88,roughness:.23}),fabric=new THREE.MeshStandardMaterial({color:c.top,roughness:.88});

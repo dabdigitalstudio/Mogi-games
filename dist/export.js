@@ -1,4 +1,4 @@
-import {avatarAssetKey} from './avatar.js?v=rig18';
+import {avatarAssetKey} from './avatar.js?v=rig20';
 import {normalizeConfig,validateConfig,escapeHtml} from './config.js?v=rig4';
 let assetsPromise;
 function bytesToBase64(buffer){const bytes=new Uint8Array(buffer);let binary='';const step=0x8000;for(let i=0;i<bytes.length;i+=step)binary+=String.fromCharCode(...bytes.subarray(i,i+step));return btoa(binary);}
