@@ -14,11 +14,11 @@ export function createAvatar(config){
  // The source rig already has a relaxed anatomical rest pose. Keep its shoulder
  // alignment intact so the hands hang naturally beside the hips.
  for(const [name,b]of Object.entries(bones))rest[name]=b.quaternion.clone();
- function poseHands(amount){for(const side of ['Left','Right'])for(const finger of ['HandIndex','HandMiddle','HandRing','HandPinky','HandThumb'])for(let i=1;i<=4;i++){const b=bones[side+finger+i];if(b&&rest[side+finger+i])b.quaternion.copy(rest[side+finger+i]).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(finger==='HandThumb'?amount*.32:amount,0,0)));}}
  accessories(rig,bones,config,extras);
  return rig;
  });
  function rotate(name,x,y=0,z=0){if(bones[name]&&rest[name])bones[name].quaternion.copy(rest[name]).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(x,y,z)));}
+ function poseHands(amount){for(const side of ['Left','Right'])for(const finger of ['HandIndex','HandMiddle','HandRing','HandPinky','HandThumb'])for(let i=1;i<=4;i++){const b=bones[side+finger+i];if(b&&rest[side+finger+i])b.quaternion.copy(rest[side+finger+i]).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(finger==='HandThumb'?amount*.32:amount,0,0)));}}
  return {group,ready,animate(t,moving,running,jump,dt){if(!rig)return;phase+=dt*(moving?(running?12:6):1.2);const swing=moving?Math.sin(phase)*(running?.7:.3):0;poseHands(running?.42:.30);rotate('LeftUpLeg',swing);rotate('RightUpLeg',-swing);rotate('LeftLeg',Math.max(0,-swing)*1.25);rotate('RightLeg',Math.max(0,swing)*1.25);rotate('LeftArm',-swing*.85,0,0);rotate('RightArm',swing*.85,0,0);rotate('LeftForeArm',running?-.28:0);rotate('RightForeArm',running?-.28:0);rotate('Spine2',moving&&running?.07:Math.sin(t*1.3)*.004);rig.position.y=moving?Math.abs(swing)*.045:Math.sin(t*1.5)*.002;rig.rotation.x=THREE.MathUtils.lerp(rig.rotation.x,moving&&running?-.055:0,Math.min(1,dt*10));}};
 }
 function accessories(rig,bones,c,extras){
