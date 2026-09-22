@@ -1,6 +1,6 @@
 # Additional characters
 
-Knight, Mage and Rogue Hooded by Kay Lousberg.
+Barbarian, Knight, Mage, Rogue and Rogue Hooded by Kay Lousberg.
 Source: https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0
 Pack: https://kaylousberg.itch.io/kaykit-adventurers
 License: Creative Commons Zero (CC0 1.0). See ../vendor/KAYKIT-LICENSE.txt.

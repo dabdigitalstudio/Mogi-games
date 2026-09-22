@@ -42,9 +42,9 @@ Opening `dist/index.html` directly with `file://` is not recommended because bro
 
 - Frontend: HTML, CSS and native JavaScript ES modules
 - 3D rendering: Three.js and WebGL
-- Character assets: rigged GLB models with textures and animation-ready skeletons
+- Character assets: five additional rigged KayKit GLB models (Barbarian, Knight, Mage, Rogue and Hooded Rogue) with embedded textures and animation-ready skeletons
 - Storage: browser `localStorage` for the local draft, plus downloadable JSON project files
-- Export: standalone HTML and ZIP generation in the browser
+- Export: standalone HTML and ZIP generation in the browser; each export embeds only the selected character GLB plus the applicable license texts
 - Backend: none. The project does not require a server, database, authentication or API. A static host such as GitHub Pages, Netlify or Cloudflare Pages can serve it.
 
 The editable studio lives in `dist/index.html`. The exported playable runtime is bundled in `dist/player.bundle.js` and uses the same 3D engine and résumé data format.

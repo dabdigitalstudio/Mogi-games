@@ -9,4 +9,4 @@ for(const preset of PRESETS.filter(p=>p.asset)){
  const gltf=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)));assert(gltf.skins.length);for(const name of ['Idle','Walking_A','Running_A','Jump_Idle'])assert(gltf.animations.some(a=>a.name===name));assert(gltf.buffers.every(b=>!b.uri));assert(gltf.images.every(i=>i.bufferView!==undefined));
  const [js,css,license,characters,assets]=await exportAssets(preset.asset);assert.deepEqual(Object.keys(assets),[preset.asset]);assert(Buffer.from(assets[preset.asset],'base64').equals(bytes));assert(characters.includes('CC0'));const html=standaloneHtml(config,js,css,assets);assert(html.includes('id="avatar-assets"'));assert(html.includes(preset.asset));
 }
-console.log('PASS: 3 rigged characters, embedded textures, 4 animation states, project round trip and self-contained export assets.');
+console.log(`PASS: ${PRESETS.filter(p=>p.asset).length} rigged characters, embedded textures, 4 animation states, project round trip and self-contained export assets.`);
