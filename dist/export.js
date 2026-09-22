@@ -4,7 +4,8 @@ let assetsPromise;
 function bytesToBase64(buffer){const bytes=new Uint8Array(buffer);let binary='';const step=0x8000;for(let i=0;i<bytes.length;i+=step)binary+=String.fromCharCode(...bytes.subarray(i,i+step));return btoa(binary);}
 export async function exportAssets(assetKey){
  const files=await (assetsPromise??=Promise.all(['player.bundle.js','player.css','vendor/LICENSE'].map(async path=>{const r=await fetch(new URL(path,import.meta.url));if(!r.ok)throw Error('Export asset unavailable: '+path);return r.text();})).catch(e=>{assetsPromise=null;throw e;}));
- const licenses=await Promise.all(['vendor/QUATERNIUS-LICENSE.txt','vendor/AVATAR-SDK-LICENSE.txt','vendor/KAYKIT-LICENSE.txt'].map(async path=>{const r=await fetch(new URL(path,import.meta.url));if(!r.ok)throw Error('Missing license: '+path);return r.text();}));
+ const licensePaths=assetKey.startsWith('kay-')?['vendor/KAYKIT-LICENSE.txt']:['vendor/QUATERNIUS-LICENSE.txt','vendor/AVATAR-SDK-LICENSE.txt'];
+ const licenses=await Promise.all(licensePaths.map(async path=>{const r=await fetch(new URL(path,import.meta.url));if(!r.ok)throw Error('Missing license: '+path);return r.text();}));
  const r=await fetch(new URL('assets/'+assetKey+'.glb',import.meta.url));if(!r.ok)throw Error('Character unavailable');
  return [...files,licenses.join('\n\n'),{[assetKey]:bytesToBase64(await r.arrayBuffer())}];
 }
