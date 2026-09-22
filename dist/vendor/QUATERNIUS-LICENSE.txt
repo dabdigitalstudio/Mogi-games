@@ -1,0 +1,6 @@
+Human head and hand geometry: Quaternius — Universal Base Characters, Standard pack.
+License: CC0 1.0 Universal (public domain dedication).
+Official source: https://quaternius.com/packs/universalbasecharacters.html
+License: https://creativecommons.org/publicdomain/zero/1.0/
+Geometry obtained from the CC0 Superhero Male derivative at https://github.com/programasweights/avatar/blob/main/public/assets/character.glb
+Adaptations: extracted head, eyebrow, eye and hand geometry; rescaled, recolored and combined with original procedural clothing, hair and accessories.

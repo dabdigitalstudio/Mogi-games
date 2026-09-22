@@ -1,5 +1,5 @@
-import * as THREE from './vendor/three.module.js';
-import {data} from './resume.js';
+import * as THREE from './vendor/three.module.js?v=rig4';
+import {data} from './resume.js?v=rig4';
 const $=s=>document.querySelector(s),canvas=$('#scene'),dialog=$('#details'),keys=new Set(),visited=new Set();
 let nearby=null,returnFocus=null;
 function updateProgress(){ $('#count').textContent=`${visited.size} / 4`;$('#progress').style.width=`${visited.size*25}%`;for(const id of visited){const b=$(`[data-section="${id}"]`);b.classList.add('visited');b.querySelector('.check').textContent='✓';}if(visited.size===4)toast('District explored. Thanks for getting to know my work.'); }
