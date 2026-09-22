@@ -42,7 +42,7 @@ Opening `dist/index.html` directly with `file://` is not recommended because bro
 
 - Frontend: HTML, CSS and native JavaScript ES modules
 - 3D rendering: Three.js and WebGL
-- Character assets: five additional rigged KayKit GLB models (Barbarian, Knight, Mage, Rogue and Hooded Rogue) with embedded textures and animation-ready skeletons
+- Character assets: five original rigged GLB variants plus five additional rigged KayKit GLB models (Barbarian, Knight, Mage, Rogue and Hooded Rogue), all loaded through the same GLTF skeleton pipeline with embedded textures
 - Storage: browser `localStorage` for the local draft, plus downloadable JSON project files
 - Export: standalone HTML and ZIP generation in the browser; each export embeds only the selected character GLB plus the applicable license texts
 - Backend: none. The project does not require a server, database, authentication or API. A static host such as GitHub Pages, Netlify or Cloudflare Pages can serve it.
