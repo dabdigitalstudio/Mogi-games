@@ -7,7 +7,7 @@ export function buildWorld(scene,id,language='he'){
  const unit=new THREE.BoxGeometry(1,1,1);geometries.set('box',unit);
  function box(x,y,z,w,h,d,color,extra={}){const mesh=new THREE.Mesh(unit,material(color,extra));mesh.position.set(x,y,z);mesh.scale.set(w,h,d);mesh.castShadow=true;mesh.receiveShadow=true;root.add(mesh);return mesh;}
  function cylinder(x,y,z,r,h,color,top=r,n=16){const key=`c:${r}:${h}:${top}:${n}`;if(!geometries.has(key))geometries.set(key,new THREE.CylinderGeometry(top,r,h,n));const m=new THREE.Mesh(geometries.get(key),material(color));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;root.add(m);return m;}
- function ball(x,y,z,r,color,extra={},detail=1){const key=`s:${r}:${detail}`;if(!geometries.has(key))geometries.set(key,new THREE.IcosahedronGeometry(r,detail));const m=new THREE.Mesh(geometries.get(key),material(color,extra));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;root.add(m);return m;}
+ function ball(x,y,z,r,color,extra={},detail=2){const key=`s:${r}:${detail}`;if(!geometries.has(key))geometries.set(key,new THREE.IcosahedronGeometry(r,detail));const m=new THREE.Mesh(geometries.get(key),material(color,extra));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;root.add(m);return m;}
  const glow=(x,y,z,w,h,d,color)=>box(x,y,z,w,h,d,color,{emissive:color,emissiveIntensity:1.8,roughness:.35});
  const solid=(x,z,w,d,height=8)=>colliders.push({x,z,w:w/2+.45,d:d/2+.45,height});
  function sign(text,x,y,z,w,h,color=theme.color,bg='#1b2b39'){

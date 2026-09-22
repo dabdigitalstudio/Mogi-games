@@ -2,4 +2,4 @@
 
 @media(max-width:600px){.studio-brand>div{display:none}.header-actions #loadProject{display:block}}
 
-.extras-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.extra-choice{display:flex;align-items:center;gap:9px;padding:13px 10px;border:1px solid #354151;border-radius:10px;cursor:pointer;font-size:13px;background:#1c2734}.extra-choice:has(input:checked){border-color:#c9e982;background:#29352f}.extra-choice input{accent-color:#c9e982;width:16px;height:16px}
+.extras-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.extra-choice{display:flex;align-items:center;gap:9px;padding:10px;border:1px solid #354151;border-radius:10px;cursor:pointer;font-size:13px;background:#1c2734}.extra-choice:has(input:checked){border-color:#c9e982;background:#29352f}.extra-choice input{accent-color:#c9e982;width:16px;height:16px}.extra-icon{width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:#2b394a;color:#d9f59c;flex:0 0 auto}.extra-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
