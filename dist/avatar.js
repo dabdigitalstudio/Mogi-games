@@ -3,71 +3,16 @@ import {GLTFLoader} from './vendor/GLTFLoader.js?v=rig4';
 import {clone as cloneSkeleton} from './vendor/utils/SkeletonUtils.js?v=rig4';
 const templates=new Map();
 const rendererAnisotropy=8;
-export function avatarAssetKey(c){if(c.asset&&['kay-barbarian','kay-knight','kay-mage','kay-rogue','kay-rogue_hooded'].includes(c.asset))return c.asset;const female=c.model==='female';return female?(c.outfit==='hoodie'?'human-female-hoodie':'human-female'):(c.outfit==='jacket'?'human-male-jacket':c.outfit==='longsleeve'?'human-male-longsleeve':'human-male');}
+import {PRESETS} from './config.js?v=rig21';
+export function avatarAssetKey(c){return PRESETS.find(p=>p.asset===c.asset)?.asset||PRESETS[0].asset;}
 async function template(key){if(!templates.has(key))templates.set(key,(async()=>{const embedded=document.querySelector('#avatar-assets');const data=embedded?JSON.parse(embedded.textContent)[key]:null;let bytes;if(data)bytes=Uint8Array.from(atob(data),c=>c.charCodeAt(0)).buffer;else{const response=await fetch(new URL('assets/'+key+'.glb?v=4',document.baseURI));if(!response.ok)throw Error('Character asset unavailable');bytes=await response.arrayBuffer();}const gltf=await new GLTFLoader().parseAsync(bytes,'');gltf.scene.animations=gltf.animations;return gltf.scene;})().catch(e=>{templates.delete(key);throw e;}));return templates.get(key);}
-export function createAvatar(config){
- if(config.asset&&['kay-barbarian','kay-knight','kay-mage','kay-rogue','kay-rogue_hooded'].includes(config.asset))return createLicensedAvatar(config);
- const group=new THREE.Group();let rig,bones={},rest={},phase=0;const extras=new Set(config.extras||[]);
- const ready=template(avatarAssetKey(config)).then(source=>{if(group.userData.disposed)return;rig=cloneSkeleton(source);rig.rotation.y=Math.PI;group.add(rig);
- rig.traverse(o=>{if(o.isBone){const name=o.userData.originalName||o.name.replace(/_\d+$/,'');if(!bones[name])bones[name]=o;}if(o.isMesh){o.geometry=o.geometry.clone();o.material=o.material.clone();for(const [k,v]of Object.entries(o.material))if(v?.isTexture){o.material[k]=v.clone();v.colorSpace=THREE.SRGBColorSpace;v.anisotropy=rendererAnisotropy;v.minFilter=THREE.LinearMipmapLinearFilter;v.magFilter=THREE.LinearFilter;v.needsUpdate=true;}o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;const n=o.name;if(/Cornea|Eyelashes|Teeth/.test(n))o.visible=false;if(/Eyeball/i.test(n)){o.visible=true;o.material.color.set(config.eyeColor||'#667b72');o.material.roughness=.16;o.material.clearcoat=.6;}if(/hair/i.test(n)){o.visible=config.hair!=='none';o.material.color.set(config.hairColor);o.material.roughness=.75;o.material.alphaTest=.4;o.material.side=THREE.DoubleSide;}if(n==='outfit_top'){o.material.color.set(config.top);o.material.map=null;o.material.roughness=.82;}if(n==='outfit_bottom'){o.material.color.set(config.pants);o.material.map=null;o.material.roughness=.82;}if(n==='outfit_shoes'){o.material.color.set(config.shoes);o.material.map=null;o.material.roughness=.42;}if(n==='AvatarHead'||n==='AvatarBody'){o.material.roughness=.58;o.material.clearcoat=.16;o.material.clearcoatRoughness=.28;const tint=new THREE.Color(config.skin);o.material.color.setRGB(.72+tint.r*.28,.72+tint.g*.28,.72+tint.b*.28);}}});
- group.updateMatrixWorld(true);
- function lowerArm(name,child,side,reach=.32,drop=.94,depth=.16){const b=bones[name],c=bones[child];if(!b||!c)return;const origin=b.getWorldPosition(new THREE.Vector3()),v=c.getWorldPosition(new THREE.Vector3()).sub(origin).normalize();const target=new THREE.Vector3(side*reach,-drop,depth).normalize().applyQuaternion(rig.getWorldQuaternion(new THREE.Quaternion()));const delta=new THREE.Quaternion().setFromUnitVectors(v,target),parent=b.parent.getWorldQuaternion(new THREE.Quaternion());const local=parent.clone().invert().multiply(delta).multiply(parent);b.quaternion.premultiply(local);group.updateMatrixWorld(true);}
- // The source models use a T-pose bind pose. Build a relaxed standing pose once,
- // then use it as the baseline for all idle, walk and run animation.
- lowerArm('LeftArm','LeftForeArm',1,.32,.94,.16);
- lowerArm('RightArm','RightForeArm',-1,.32,.94,.16);
- lowerArm('LeftForeArm','LeftHand',1,.14,.99,.13);
- lowerArm('RightForeArm','RightHand',-1,.14,.99,.13);
- for(const [name,b]of Object.entries(bones))rest[name]=b.quaternion.clone();
- accessories(rig,bones,config,extras);
- // Change anatomical proportions, not camera framing: large head and compact body.
- const build=config.body==='slim'?.96:config.body==='athletic'?1.04:1;
- bones.Hips?.scale.multiply(new THREE.Vector3(1.22*build,.58,1.22*build));
- bones.Head?.scale.multiply(new THREE.Vector3(1.95,3.85,1.95));
- for(const side of ['Left','Right']){
-  bones[side+'UpLeg']?.scale.multiply(new THREE.Vector3(1,.75,1));
-  bones[side+'Arm']?.scale.multiply(new THREE.Vector3(.72,1,1));
- }
- // Torso accessories were authored in model space; carry them with the torso.
- for(const item of [...rig.children])if(item.isMesh&&!item.isSkinnedMesh){
-  item.position.y=.943645+(item.position.y-.943645)*.58;
-  item.position.x*=1.22;item.position.z*=1.22;
-  item.scale.multiply(new THREE.Vector3(1.22,.58,1.22));
- }
- rig.scale.setScalar(1);rig.position.y=0;group.updateMatrixWorld(true);
- const fitted=new THREE.Box3();rig.traverse(o=>{if(o.isMesh&&o.visible){if(o.isSkinnedMesh){o.skeleton.update();o.computeBoundingBox();}else o.geometry.computeBoundingBox();fitted.union((o.isSkinnedMesh?o.boundingBox:o.geometry.boundingBox).clone().applyMatrix4(o.matrixWorld));}});
- const fittedScale=2.45/(fitted.max.y-fitted.min.y);rig.scale.setScalar(fittedScale);rig.position.y=-fitted.min.y*fittedScale;rig.userData.floorOffset=rig.position.y;group.updateMatrixWorld(true);
- const chest=bones.Spine2||bones.Spine;if(chest)for(const item of [...rig.children])if(item.isMesh&&!item.isSkinnedMesh)chest.attach(item);
- return rig;
- });
- function rotate(name,x,y=0,z=0){if(bones[name]&&rest[name])bones[name].quaternion.copy(rest[name]).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(x,y,z)));}
- function poseHands(amount){for(const side of ['Left','Right'])for(const finger of ['HandIndex','HandMiddle','HandRing','HandPinky','HandThumb'])for(let i=1;i<=4;i++){const b=bones[side+finger+i];if(b&&rest[side+finger+i])b.quaternion.copy(rest[side+finger+i]).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(finger==='HandThumb'?amount*.32:amount,0,0)));}}
- return {group,ready,animate(t,moving,running,jump,dt){if(!rig)return;phase+=dt*(moving?(running?12:6):1.2);const swing=moving?Math.sin(phase)*(running?.7:.3):0;poseHands(running?.42:.30);rotate('LeftUpLeg',swing);rotate('RightUpLeg',-swing);rotate('LeftLeg',Math.max(0,-swing)*1.25);rotate('RightLeg',Math.max(0,swing)*1.25);rotate('LeftArm',-swing*.85,0,0);rotate('RightArm',swing*.85,0,0);rotate('LeftForeArm',running?-.28:0);rotate('RightForeArm',running?-.28:0);rotate('Spine2',moving&&running?.07:Math.sin(t*1.3)*.004);rig.position.y=(rig.userData.floorOffset||0)+(moving?Math.abs(swing)*.045:Math.sin(t*1.5)*.002);rig.rotation.x=THREE.MathUtils.lerp(rig.rotation.x,moving&&running?-.055:0,Math.min(1,dt*10));}};
-}
-function accessories(rig,bones,c,extras){
- const dark=new THREE.MeshStandardMaterial({color:'#18232c',roughness:.4}),metal=new THREE.MeshStandardMaterial({color:c.accessoryColor,metalness:.88,roughness:.23}),fabric=new THREE.MeshStandardMaterial({color:c.top,roughness:.88});
- const head=bones.Head;if(!head)return;rig.updateMatrixWorld(true);
- function mesh(geometry,material,x,y,z,parent=rig){const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.castShadow=true;parent.add(m);return m;}
- function tube(points,r,material,parent=rig){return mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p))),32,r,8,false),material,0,0,0,parent);}
- function box(x,y,z,w,h,d,material,parent=rig){const g=new THREE.BoxGeometry(w,h,d,3,3,3);return mesh(g,material,x,y,z,parent);}
- // Accessories follow anatomical head and wrist joints rather than body primitives.
- const headItems=new THREE.Group();head.add(headItems);headItems.position.y=.035;
- if(['glasses','both'].includes(c.accessory)||extras.has('sunglasses')){for(const s of[-1,1]){const frame=mesh(new THREE.TorusGeometry(.029,.0028,10,40),dark,s*.036,.062,.092,headItems);frame.scale.y=.72;if(extras.has('sunglasses')){const lens=mesh(new THREE.CircleGeometry(.026,32),new THREE.MeshPhysicalMaterial({color:'#14232d',metalness:.25,roughness:.12,clearcoat:1,side:THREE.DoubleSide}),s*.036,.062,.093,headItems);lens.scale.y=.72;}tube([[s*.063,.067,.092],[s*.077,.067,.055],[s*.077,.055,-.008]],.0025,dark,headItems);}tube([[-.008,.065,.094],[0,.07,.10],[.008,.065,.094]],.0025,dark,headItems);}
- if(extras.has('headphones')){tube([[-.088,.04,0],[-.093,.14,0],[0,.19,0],[.093,.14,0],[.088,.04,0]],.009,dark,headItems);for(const s of[-1,1]){const cup=mesh(new THREE.SphereGeometry(1,24,18),dark,s*.085,.04,0,headItems);cup.scale.set(.025,.046,.033);box(s*.108,.04,0,.006,.05,.036,metal,headItems);}}
- if(extras.has('earrings'))for(const s of[-1,1])mesh(new THREE.TorusGeometry(.013,.0025,8,28),metal,s*.078,.005,.005,headItems);
- if(extras.has('cap')||extras.has('beanie')){const hat=mesh(new THREE.SphereGeometry(.092,40,24,0,Math.PI*2,0,1.65),fabric,0,.092,0,headItems);hat.scale.set(1,extras.has('beanie')?1.12:.85,1.08);if(extras.has('cap')){const bill=mesh(new THREE.SphereGeometry(1,32,16),fabric,0,.093,.09,headItems);bill.scale.set(.09,.007,.075);}}
- if(extras.has('watch')&&bones.LeftForeArm){const wrist=new THREE.Group();bones.LeftHand?.add(wrist);const band=mesh(new THREE.TorusGeometry(.026,.005,8,32),dark,0,-.018,0,wrist);band.rotation.x=Math.PI/2;box(0,-.018,.027,.029,.031,.006,metal,wrist);box(0,-.018,.031,.023,.025,.002,dark,wrist);}
- if(['backpack','both'].includes(c.accessory)){const pack=mesh(new THREE.CapsuleGeometry(.15,.20,8,18),dark,0,1.27,-.135);pack.scale.z=.42;for(const s of[-1,1])tube([[s*.09,1.43,-.12],[s*.14,1.46,.035],[s*.13,1.22,.08],[s*.10,1.11,-.08]],.009,dark);const flap=mesh(new THREE.CapsuleGeometry(.095,.06,8,14),fabric,0,1.19,-.19);flap.scale.z=.3;}
- if(extras.has('chain')){tube([[-.055,1.56,.022],[-.065,1.48,.08],[0,1.38,.13],[.065,1.48,.08],[.055,1.56,.022]],.0028,metal);box(0,1.37,.134,.022,.029,.004,metal);}
- if(extras.has('crossbody')){tube([[-.16,1.48,.06],[-.06,1.31,.135],[.13,1.09,.145],[.18,1.03,.05]],.012,dark);box(.1,1.06,.14,.20,.14,.055,dark);box(.1,1.085,.171,.02,.018,.007,metal);}
-}
-
+export function createAvatar(config){return createLicensedAvatar(config);}
 function createLicensedAvatar(config){
  const group=new THREE.Group();let mixer,active,actions={};
  const ready=template(avatarAssetKey(config)).then(source=>{
   if(group.userData.disposed)return;
   const rig=cloneSkeleton(source);group.add(rig);
-  rig.traverse(o=>{if(o.isMesh){o.visible=/^(Barbarian|Knight|Mage|Rogue)_/.test(o.name);o.geometry=o.geometry.clone();o.material=o.material.clone();for(const [key,value] of Object.entries(o.material))if(value?.isTexture){o.material[key]=value.clone();o.material[key].anisotropy=8;}o.castShadow=true;o.receiveShadow=true;}});
+  rig.traverse(o=>{if(o.isMesh){o.visible=/^(Barbarian|Knight|Mage|Rogue|Skeleton)_/.test(o.name);if(config.originalGear===false&&/_(Hat|Helmet|Hood|Cape|Cloak)$/.test(o.name))o.visible=false;o.geometry=o.geometry.clone();o.material=o.material.clone();for(const [key,value] of Object.entries(o.material))if(value?.isTexture){o.material[key]=value.clone();o.material[key].anisotropy=8;}o.castShadow=true;o.receiveShadow=true;}});
   const bounds=new THREE.Box3().setFromObject(rig);const size=bounds.getSize(new THREE.Vector3());const scale=2.45/size.y;rig.scale.multiplyScalar(scale);rig.position.y=-bounds.min.y*scale;rig.rotation.y=Math.PI;
   mixer=new THREE.AnimationMixer(rig);
   for(const [state,name] of Object.entries({idle:'Idle',walk:'Walking_A',run:'Running_A',jump:'Jump_Idle'})){const clip=source.animations.find(c=>c.name===name);if(clip)actions[state]=mixer.clipAction(clip);}

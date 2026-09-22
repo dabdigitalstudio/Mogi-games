@@ -4,8 +4,8 @@ Portfolio Studio is a bilingual Hebrew/English platform for creating an interact
 
 Users can:
 
-- choose a realistic male or female character base;
-- customize clothing, colors, hairstyle, face options and accessories;
+- choose one of nine original KayKit CC0 characters, including four playful skeletons;
+- toggle matching hats, helmets, hoods and cloaks on the skeleton characters;
 - fill in introduction, skills, experience, education, projects and contact details;
 - choose between five 3D worlds;
 - explore the portfolio with keyboard controls and press Enter at résumé stations;
@@ -42,7 +42,7 @@ Opening `dist/index.html` directly with `file://` is not recommended because bro
 
 - Frontend: HTML, CSS and native JavaScript ES modules
 - 3D rendering: Three.js and WebGL
-- Character assets: five original rigged GLB variants plus five additional rigged KayKit GLB models (Barbarian, Knight, Mage, Rogue and Hooded Rogue), all loaded through the same GLTF skeleton pipeline with embedded textures
+- Character assets: nine rigged KayKit GLB models with embedded textures and authored idle, walk, run and jump animations. All current character assets are CC0.
 - Storage: browser `localStorage` for the local draft, plus downloadable JSON project files
 - Export: standalone HTML and ZIP generation in the browser; each export embeds only the selected character GLB plus the applicable license texts
 - Backend: none. The project does not require a server, database, authentication or API. A static host such as GitHub Pages, Netlify or Cloudflare Pages can serve it.
@@ -52,3 +52,5 @@ The editable studio lives in `dist/index.html`. The exported playable runtime is
 ## Deploying the static site
 
 For GitHub Pages, configure the repository's Pages settings to publish from the `main` branch and the `/dist` folder, if that option is available. Alternatively, copy the contents of `dist` to any static hosting provider.
+
+Legacy human-character drafts migrate to the Barbarian while retaining résumé content. Skeleton equipment is supplied within each original GLB and shares its CC0 license. Source links and license files are in dist/assets/KAYKIT-SOURCES.md and dist/vendor.
