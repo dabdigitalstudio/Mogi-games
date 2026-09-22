@@ -13,10 +13,10 @@ export function createAvatar(config){
  function lowerArm(name,child,side,reach=.32,drop=.94,depth=.16){const b=bones[name],c=bones[child];if(!b||!c)return;const origin=b.getWorldPosition(new THREE.Vector3()),v=c.getWorldPosition(new THREE.Vector3()).sub(origin).normalize();const target=new THREE.Vector3(side*reach,-drop,depth).normalize().applyQuaternion(rig.getWorldQuaternion(new THREE.Quaternion()));const delta=new THREE.Quaternion().setFromUnitVectors(v,target),parent=b.parent.getWorldQuaternion(new THREE.Quaternion());const local=parent.clone().invert().multiply(delta).multiply(parent);b.quaternion.premultiply(local);group.updateMatrixWorld(true);}
  // The source models use a T-pose bind pose. Build a relaxed standing pose once,
  // then use it as the baseline for all idle, walk and run animation.
- lowerArm('LeftArm','LeftForeArm',-1,.32,.94,.16);
- lowerArm('RightArm','RightForeArm',1,.32,.94,.16);
- lowerArm('LeftForeArm','LeftHand',-1,.14,.99,.13);
- lowerArm('RightForeArm','RightHand',1,.14,.99,.13);
+ lowerArm('LeftArm','LeftForeArm',1,.32,.94,.16);
+ lowerArm('RightArm','RightForeArm',-1,.32,.94,.16);
+ lowerArm('LeftForeArm','LeftHand',1,.14,.99,.13);
+ lowerArm('RightForeArm','RightHand',-1,.14,.99,.13);
  for(const [name,b]of Object.entries(bones))rest[name]=b.quaternion.clone();
  accessories(rig,bones,config,extras);
  return rig;
