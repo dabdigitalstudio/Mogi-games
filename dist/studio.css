@@ -3,3 +3,29 @@
 @media(max-width:600px){.studio-brand>div{display:none}.header-actions #loadProject{display:block}}
 
 .extras-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.extra-choice{display:flex;align-items:center;gap:9px;padding:10px;border:1px solid #354151;border-radius:10px;cursor:pointer;font-size:13px;background:#1c2734}.extra-choice:has(input:checked){border-color:#c9e982;background:#29352f}.extra-choice input{accent-color:#c9e982;width:16px;height:16px}.extra-icon{width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:#2b394a;color:#d9f59c;flex:0 0 auto}.extra-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* Character creator HUD: dark glass panels, neon controls and a focused showroom. */
+:root{--hud-cyan:#52e9f5;--hud-violet:#9f7bff;--hud-line:#52e9f54d}
+.studio-workspace{grid-template-columns:minmax(0,1fr) 430px;background:#070b16;position:relative}
+.editor-shell{order:2;background:linear-gradient(180deg,#0e1728f5,#080e1cf5);border-inline-start:1px solid var(--hud-line);border-inline-end:0;box-shadow:-20px 0 70px #05091480;position:relative;z-index:3}
+.editor-shell::before{content:'AVATAR CUSTOMIZATION // MATRIX';position:absolute;top:9px;inset-inline:27px;color:#52e9f5aa;font:9px monospace;letter-spacing:1.5px;pointer-events:none}
+.editor{padding-top:38px;background:linear-gradient(180deg,#0c1525cc,#0b1220cc)}
+.editor-heading{padding:16px 15px;border:1px solid var(--hud-line);border-radius:4px;background:linear-gradient(135deg,#102638b5,#15152f66);box-shadow:inset 0 0 24px #31d9ed0c,0 0 24px #16dbe00b;position:relative}
+.editor-heading::after{content:'';position:absolute;top:-1px;inset-inline-end:18px;width:45px;height:2px;background:var(--hud-cyan);box-shadow:0 0 12px var(--hud-cyan)}
+.editor-kicker{color:var(--hud-cyan);font-family:monospace;letter-spacing:2px}
+.editor h1{font-size:23px;text-shadow:0 0 18px #63e7ef33}
+.form-section-title{color:#dffcff;font-family:monospace;text-transform:uppercase;letter-spacing:1.1px;font-size:11px;margin-top:28px}
+.form-section-title::before{content:'◈';color:var(--hud-cyan);font-size:10px}.form-section-title::after{background:linear-gradient(90deg,var(--hud-line),transparent)}
+.preset-card,.choice-pills button,.color-control,.field input:not([type=color]):not([type=checkbox]),.field textarea,.field select,.extra-choice{background:#0d1b2b;border-color:#2b5262;border-radius:4px;box-shadow:inset 0 0 15px #35d9e008}
+.preset-card.active,.choice-pills button.active,.extra-choice:has(input:checked){border-color:var(--hud-cyan);box-shadow:0 0 15px #52e9f533,inset 0 0 18px #52e9f510}
+.preview{order:1;background:#070b16;isolation:isolate}
+.preview::before{content:'';position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at 50% 48%,#183c55 0,#0d1a2d 34%,#060914 78%),linear-gradient(110deg,#0de3e711 1px,transparent 1px),linear-gradient(#9f7bff0b 1px,transparent 1px);background-size:auto,44px 44px,44px 44px;mask-image:linear-gradient(180deg,#000,transparent 90%)}
+.preview::after{content:'// SHOWROOM 01  •  LIVE RENDER';position:absolute;top:25px;inset-inline-start:30px;color:#52e9f599;font:10px monospace;letter-spacing:2px;pointer-events:none}
+.preview-shade{background:linear-gradient(90deg,#070b1600 55%,#070b164d),linear-gradient(180deg,#070b1644,transparent 25%,transparent 72%,#070b16c9)}
+.preview-toolbar{top:55px}.view-switch{border-color:var(--hud-line);background:#071625bb;box-shadow:0 0 18px #0be1f21a}.view-switch button.active{color:var(--hud-cyan);background:#52e9f51a}
+.preview-caption{bottom:66px}.preview-kicker{color:var(--hud-cyan);font-family:monospace}.preview-caption h2{text-shadow:0 0 22px #52e9f533}
+.live-label{font-family:monospace;color:#8df5e8}.live-label::before{background:var(--hud-cyan);box-shadow:0 0 14px var(--hud-cyan)}
+.editor-footer{background:#080f1ceF;border-top-color:var(--hud-line)}
+.primary-button{background:linear-gradient(135deg,#c8ff8c,#75f3d0);box-shadow:0 0 18px #77f1c433;color:#07181c;border-radius:4px}
+@media(max-width:1100px){.studio-workspace{grid-template-columns:minmax(0,1fr) 350px}}
+@media(max-width:760px){.studio-workspace{display:flex;flex-direction:column}.editor-shell{order:2;border-inline-start:0;border-top:1px solid var(--hud-line)}.preview{order:1}.preview::after{top:16px;inset-inline-start:17px;font-size:8px}.preview-toolbar{top:38px}}

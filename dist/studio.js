@@ -1,4 +1,4 @@
-import {PortfolioEngine} from './engine.js?v=rig7';
+import {PortfolioEngine} from './engine.js?v=rig12';
 import {DEFAULT_CONFIG,PRESETS,WORLDS,normalizeConfig,validateConfig,clone,escapeHtml as e,safeUrl} from './config.js?v=rig4';
 import {t} from './i18n.js?v=rig4';
 import {createGameUI} from './game-ui.js?v=rig4';
